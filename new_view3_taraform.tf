@@ -1,8 +1,8 @@
-module "lambda_test_user" {
+module "lambda_new_view3" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "7.7.1"
-  function_name = "${local.base_name}-test_user"
-  role_name     = "rol-${local.base_name}-test_user"
+  function_name = "${local.base_name}-new_view3"
+  role_name     = "rol-${local.base_name}-new_view3"
   handler       = "testHandler"
   runtime       = "java17"
   memory_size   = local.lambda_default_memory
@@ -27,38 +27,38 @@ module "lambda_test_user" {
     ISS      = "https://login.microsoftonline.com/b22cedd0-184b-4b56-ac34-991ce150377d/v2.0"
     SIGN_KEY = "SIGN_KEY-TEST"
     JWT_PUBLIC_ARN = var.jwt_public_arn
-    DB_USERNAME  = "${local.base_name}-test_user"
+    DB_USERNAME  = "${local.base_name}-new_view3"
   }, local.lambda_default_envs, local.lambda_db_envs)
   tags = merge(local.standard_tags, local.lambda_tags)
 }
-resource "postgresql_role" "lambda_test_user_db_test_user" {
-  name  = module.lambda_test_user.lambda_function_name
+resource "postgresql_role" "lambda_new_view3_db_new_view3" {
+  name  = module.lambda_new_view3.lambda_function_name
   login = true
   // RDS iam takes precedence over password auth, so this is disabled immediatly
-  password  = "tmp-lambda-test_user-secure-password"
+  password  = "tmp-lambda-new_view3-secure-password"
   superuser = false
   roles     = ["rds_iam", "pg_read_all_data", "pg_write_all_data"]
 }
-module "lambda_test_user_paths" {
+module "lambda_new_view3_paths" {
   source          = "../modules/lambda_lb_route"
   maintenance_mode_bypass_code_arn           = var.maintenance_mode_bypass_code_arn
   vpc_id          = var.vpc_id
   lb_listener_arn = module.backend_lb.listeners["https"].arn
-  function_name = module.lambda_test_user.lambda_function_name
-  function_arn  = module.lambda_test_user.lambda_function_arn
+  function_name = module.lambda_new_view3.lambda_function_name
+  function_arn  = module.lambda_new_view3.lambda_function_arn
   priority      = 42
   path_patterns = ["/<lambda_path>/*", "/<lambda_path>"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
-module "lambda_test_user_paths2" {
+module "lambda_new_view3_paths2" {
   count           = var.create_public_endpoints ? 1 : 0
   source          = "../modules/lambda_lb_route"
   maintenance_mode_bypass_code_arn           = var.maintenance_mode_bypass_code_arn
   vpc_id          = var.vpc_id
   lb_listener_arn = aws_alb_listener.api_http.0.arn
-  target_name   = "test_user-2"
-  function_name = module.lambda_test_user.lambda_function_name
-  function_arn  = module.lambda_test_user.lambda_function_arn
+  target_name   = "new_view3-2"
+  function_name = module.lambda_new_view3.lambda_function_name
+  function_arn  = module.lambda_new_view3.lambda_function_arn
   priority      = 42
   path_patterns = ["/new_path/*", "/new_path"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
