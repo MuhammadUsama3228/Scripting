@@ -1,9 +1,9 @@
-module "lambda_user" {
+module "lambda_<lambda_name>" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "7.7.1"
-  function_name = "${local.base_name}-user"
-  role_name     = "rol-${local.base_name}-user"
-  handler       = "com.haloconnect.communicationswidget.CommunicationsWidgetHandler::handleRequest"
+  function_name = "${local.base_name}-<lambda_name2>"
+  role_name     = "rol-${local.base_name}-<lambda_name2>"
+  handler       = "<lambda_handler>"
   runtime       = "java17"
   memory_size = local.lambda_default_memory
   // Terraform shouldn't manage code deploys
@@ -28,39 +28,39 @@ module "lambda_user" {
     ISS      = "https://login.microsoftonline.com/b22cedd0-184b-4b56-ac34-991ce150377d/v2.0"
     SIGN_KEY = "SIGN_KEY-TEST"
     JWT_PUBLIC_ARN = var.jwt_public_arn
-    DB_USERNAME  = "${local.base_name}-user"
+    DB_USERNAME  = "${local.base_name}-<lambda_name2>"
   }, local.lambda_default_envs, local.lambda_db_envs)
   tags = merge(local.standard_tags, local.lambda_tags)
 }
-module "lambda_user_paths" {
+module "lambda_<lambda_name>_paths" {
   source          = "../modules/lambda_lb_route"
   maintenance_mode_bypass_code_arn           = var.maintenance_mode_bypass_code_arn
   vpc_id          = var.vpc_id
   lb_listener_arn = module.backend_lb.listeners["https"].arn
-  function_name = module.lambda_user.lambda_function_name
-  function_arn  = module.lambda_user.lambda_function_arn
+  function_name = module.lambda_<lambda_name>.lambda_function_name
+  function_arn  = module.lambda_<lambda_name>.lambda_function_arn
   priority      = 19
-  path_patterns = ["/user", "/user/*"]
+  path_patterns = ["/<path>", "/<path>/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
-module "lambda_user_paths2" {
+module "lambda_<lambda_name>_paths2" {
   count           = var.create_public_endpoints ? 1 : 0
   source          = "../modules/lambda_lb_route"
   maintenance_mode_bypass_code_arn           = var.maintenance_mode_bypass_code_arn
   vpc_id          = var.vpc_id
   lb_listener_arn = aws_alb_listener.api_http.0.arn
-  target_name   = "user-2"
-  function_name = module.lambda_user.lambda_function_name
-  function_arn  = module.lambda_user.lambda_function_arn
+  target_name   = "<lambda_name2>-2"
+  function_name = module.lambda_<lambda_name>.lambda_function_name
+  function_arn  = module.lambda_<lambda_name>.lambda_function_arn
   priority      = 19
-  path_patterns = ["/user", "/user/*"]
+  path_patterns = ["/<path>", "/<path>/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
-resource "postgresql_role" "lambda_user_db_user" {
-  name  = module.lambda_user.lambda_function_name
+resource "postgresql_role" "lambda_<lambda_name>_db_user" {
+  name  = module.lambda_<lambda_name>.lambda_function_name
   login = true
   // RDS iam takes precedence over password auth, so this is disabled immediatly
-  password  = "tmp-lambda_user_db_user-password"
+  password  = "tmp-lambda_<lambda_name>_db_user-password"
   superuser = false
   roles     = ["rds_iam", "pg_read_all_data", "pg_write_all_data"]
 }
