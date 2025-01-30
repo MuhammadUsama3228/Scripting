@@ -3,7 +3,7 @@ module "lambda_communications_widget" {
   version = "7.7.1"
   function_name = "${local.base_name}-communications-widget"
   role_name     = "rol-${local.base_name}-communications-widget"
-  handler       = "testHandler"
+  handler       = "com.haloconnect.communicationswidget.CommunicationsWidgetHandler::handleRequest"
   runtime       = "java17"
   memory_size = local.lambda_default_memory
   // Terraform shouldn't manage code deploys
