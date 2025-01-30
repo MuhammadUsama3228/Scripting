@@ -40,7 +40,7 @@ module "lambda_communications_widget_paths" {
   function_name = module.lambda_communications_widget.lambda_function_name
   function_arn  = module.lambda_communications_widget.lambda_function_arn
   priority      = 19
-  path_patterns = ["/communications-widget", "/communications-widget/*"]
+  path_patterns = ["/"/communications-widget", "/communications-widget/*"", "/"/communications-widget", "/communications-widget/*"/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 module "lambda_communications_widget_paths2" {
@@ -53,7 +53,7 @@ module "lambda_communications_widget_paths2" {
   function_name = module.lambda_communications_widget.lambda_function_name
   function_arn  = module.lambda_communications_widget.lambda_function_arn
   priority      = 19
-  path_patterns = ["/communications-widget", "/communications-widget/*"]
+  path_patterns = ["/"/communications-widget", "/communications-widget/*"", "/"/communications-widget", "/communications-widget/*"/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 resource "postgresql_role" "lambda_communications_widget_db_user" {
