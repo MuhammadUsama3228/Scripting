@@ -3,7 +3,7 @@ module "lambda_communications_widget" {
   version = "7.7.1"
   function_name = "${local.base_name}-communications-widget"
   role_name     = "rol-${local.base_name}-communications-widget"
-  handler       = "com.haloconnect.communicationswidget.CommunicationsWidgetHandler::handleRequest"
+  handler       = "testHandler"
   runtime       = "java17"
   memory_size = local.lambda_default_memory
   // Terraform shouldn't manage code deploys
@@ -40,7 +40,7 @@ module "lambda_communications_widget_paths" {
   function_name = module.lambda_communications_widget.lambda_function_name
   function_arn  = module.lambda_communications_widget.lambda_function_arn
   priority      = 19
-  path_patterns = ["/communications-widget", "/communications-widget/*"]
+  path_patterns = ["/new_path", "/new_path/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 module "lambda_communications_widget_paths2" {
