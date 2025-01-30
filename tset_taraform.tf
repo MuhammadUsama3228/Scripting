@@ -40,7 +40,7 @@ module "lambda_user_paths" {
   function_name = module.lambda_user.lambda_function_name
   function_arn  = module.lambda_user.lambda_function_arn
   priority      = 19
-  path_patterns = ["/"/user", "/user/*"", "/"/user", "/user/*"/*"]
+  path_patterns = ["/user", "/user/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 module "lambda_user_paths2" {
@@ -53,7 +53,7 @@ module "lambda_user_paths2" {
   function_name = module.lambda_user.lambda_function_name
   function_arn  = module.lambda_user.lambda_function_arn
   priority      = 19
-  path_patterns = ["/"/user", "/user/*"", "/"/user", "/user/*"/*"]
+  path_patterns = ["/user", "/user/*"]
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 resource "postgresql_role" "lambda_user_db_user" {
