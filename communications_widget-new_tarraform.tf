@@ -3,7 +3,7 @@ module "lambda_communications_widget-new" {
   version = "7.7.1"
   function_name = "${local.base_name}-communications-widget"
   role_name     = "rol-${local.base_name}-communications-widget"
-  handler       = "com.haloconnect.communicationswidget.CommunicationsWidgetHandler::handleRequest"
+  handler       = "com.haloconnect"
   runtime       = "java17"
   memory_size   = local.lambda_default_memory
   // Terraform shouldn't manage code deploys
@@ -16,7 +16,7 @@ module "lambda_communications_widget-new" {
   attach_network_policy         = true
   attach_cloudwatch_logs_policy = true
   cloudwatch_logs_retention_in_days = var.retention_in_days
-  logging_log_format = "JSON"
+  
   timeout                       = 30
   attach_policy_statements = true
   policy_statements = merge({
