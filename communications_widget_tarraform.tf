@@ -16,7 +16,8 @@ module "lambda_communications_widget" {
   attach_network_policy         = true
   attach_cloudwatch_logs_policy = true
   cloudwatch_logs_retention_in_days = var.retention_in_days
-  "logging_log_format" = "JSON
+  logging_log_format = "JSON"
+
   timeout                       = 30
   attach_policy_statements = true
   policy_statements = merge({
