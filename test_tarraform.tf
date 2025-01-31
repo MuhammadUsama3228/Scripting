@@ -5,7 +5,7 @@ module "lambda_test" {
   role_name     = "rol-${local.base_name}-test"
   handler       = "com.haloconnect.user.handler.UserLambdaHandler::handleRequest"
   runtime       = "java17"
-  memory_size = local.lambda_default_memory
+  memory_size   = local.lambda_default_memory
   // Terraform shouldn't manage code deploys
   ignore_source_code_hash = true
   create_package          = false
@@ -16,7 +16,7 @@ module "lambda_test" {
   attach_network_policy         = true
   attach_cloudwatch_logs_policy = true
   cloudwatch_logs_retention_in_days = var.retention_in_days
-  logging_log_format = "JSON"
+  
   timeout                       = 30
   attach_policy_statements = true
   policy_statements = merge({
@@ -39,8 +39,8 @@ module "lambda_test_paths" {
   lb_listener_arn = module.backend_lb.listeners["https"].arn
   function_name = module.lambda_test.lambda_function_name
   function_arn  = module.lambda_test.lambda_function_arn
-  priority      = 19
-  path_patterns = ["/test", "/test/*"]
+  priority      = 42
+  path_patterns = test
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 module "lambda_test_paths2" {
@@ -52,15 +52,15 @@ module "lambda_test_paths2" {
   target_name   = "test-2"
   function_name = module.lambda_test.lambda_function_name
   function_arn  = module.lambda_test.lambda_function_arn
-  priority      = 19
-  path_patterns = ["/test", "/test/*"]
+  priority      = 42
+  path_patterns = test
   standard_tags = merge(local.standard_tags, local.lambda_tags)
 }
 resource "postgresql_role" "lambda_test_db_user" {
   name  = module.lambda_test.lambda_function_name
   login = true
   // RDS iam takes precedence over password auth, so this is disabled immediatly
-  password  = "tmp-lambda-test-db-password"
+  password  = "password_lambda"
   superuser = false
   roles     = ["rds_iam", "pg_read_all_data", "pg_write_all_data"]
 }
