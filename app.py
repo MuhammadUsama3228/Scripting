@@ -11,7 +11,7 @@ class GitManager:
         self.commit_message = commit_message
 
     def run_command(self, command):
-        """Helper function to run a shell command."""
+
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if result.returncode != 0:
             print(f"Error running command: {command}")
