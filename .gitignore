@@ -1,0 +1,44 @@
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore virtual environment directories
+venv/
+env/
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Ignore Terraform state files
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Ignore sensitive files (e.g., API keys or credentials)
+*.env
+
+# Ignore build artifacts
+/dist/
+/build/
+/target/
+
+# Ignore Java build artifacts (for example)
+*.class
+*.jar
+*.war
+
+# Ignore node_modules (for Node.js projects)
+node_modules/
+
+# Ignore Docker-related files
+docker-compose.override.yml
