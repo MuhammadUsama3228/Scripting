@@ -1,4 +1,4 @@
 FROM python
-WORKDIR /app
-COPY . /app
+WORKDIR /script
+COPY . /script
 CMD ["pyhton", "script.py"]
