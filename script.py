@@ -74,7 +74,7 @@ resource "postgresql_role" "lambda_<lambda_name>_db_user" {
 class TerraformManager:
     def __init__(
             self, file_content, lambda_handler, lambda_path, lambda_name, lambda_name2, password,
-            priority, remote_url, branch_name, logging_log_format=None
+            priority, git_name, git_email, remote_url, branch_name, logging_log_format=None
     ):
         self.file_content = file_content
         self.lambda_handler = lambda_handler
@@ -86,6 +86,8 @@ class TerraformManager:
         self.password = password
         self.remote_url = remote_url
         self.branch_name = branch_name
+        self.git_email = git_email
+        self.git_name = git_name
         self.return_file_name = None
         self.new_file_path = None
 
@@ -94,6 +96,15 @@ class TerraformManager:
             sys.stdout.write(char)
             sys.stdout.flush()
             time.sleep(delay)
+
+
+    def configure_github(self):
+        subprocess.run(["git", "config", "user.name", self.git_name])
+
+        subprocess.run(
+            ["git", "config", "user.email", self.git_email],)
+
+        print("Git user configuration updated successfully!")
 
     def make_file(self, out_filename, git=False):
         print('Original file content will be modified and saved as:', out_filename)
@@ -123,6 +134,8 @@ class TerraformManager:
                 file.write(new_content)
 
             if git:
+
+                self.configure_github()
 
                 modified_files = subprocess.check_output(['git', 'status', '--porcelain'], universal_newlines=True)
 
@@ -207,6 +220,18 @@ def main():
         print("The password cannot be empty.")
         password = input("Enter the password for the Lambda function: ")
 
+    git_name = input("Enter the Git name: ")
+    while not git_name.strip():
+        print("The Git name cannot be empty.")
+        git_name = input(
+            "Enter the Git name: ")
+
+    git_email = input("Enter the Git email: ")
+    while not git_email.strip():
+        print("The Git email cannot be empty.")
+        git_email = input(
+            "Enter the Git email: ")
+
     remote_url = input("Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
     while not remote_url.strip():
         print("The Git repository URL cannot be empty.")
@@ -229,6 +254,8 @@ def main():
         lambda_name2=lambda_name2,
         priority=priority,
         password=password,
+        git_name=git_name,
+        git_email=git_email,
         remote_url=remote_url,
         branch_name=branch_name,
         logging_log_format=logging_log_format
