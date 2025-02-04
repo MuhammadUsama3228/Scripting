@@ -6,6 +6,7 @@ module "lambda_communications_widget-new" {
   handler       = "my_lambda_handler"
   runtime       = "java17"
   memory_size   = local.lambda_default_memory
+  // Terraform shouldn't manage code deploys
   ignore_source_code_hash = true
   create_package          = false
   local_existing_package  = "./dummy_java_lambda.zip"
@@ -30,4 +31,36 @@ module "lambda_communications_widget-new" {
     DB_USERNAME  = "${local.base_name}-communications-widget"
   }, local.lambda_default_envs, local.lambda_db_envs)
   tags = merge(local.standard_tags, local.lambda_tags)
+}
+module "lambda_communications_widget-new_paths" {
+  source          = "../modules/lambda_lb_route"
+  maintenance_mode_bypass_code_arn           = var.maintenance_mode_bypass_code_arn
+  vpc_id          = var.vpc_id
+  lb_listener_arn = module.backend_lb.listeners["https"].arn
+  function_name = module.lambda_communications_widget-new.lambda_function_name
+  function_arn  = module.lambda_communications_widget-new.lambda_function_arn
+  priority      = 19
+  path_patterns = ["/communications-widget", "/communications-widget/*"]
+  standard_tags = merge(local.standard_tags, local.lambda_tags)
+}
+module "lambda_communications_widget-new_paths2" {
+  count           = var.create_public_endpoints ? 1 : 0
+  source          = "../modules/lambda_lb_route"
+  maintenance_mode_bypass_code_arn           = var.maintenance_mode_bypass_code_arn
+  vpc_id          = var.vpc_id
+  lb_listener_arn = aws_alb_listener.api_http.0.arn
+  target_name   = "communications-widget-2"
+  function_name = module.lambda_communications_widget-new.lambda_function_name
+  function_arn  = module.lambda_communications_widget-new.lambda_function_arn
+  priority      = 19
+  path_patterns = ["/communications-widget", "/communications-widget/*"]
+  standard_tags = merge(local.standard_tags, local.lambda_tags)
+}
+resource "postgresql_role" "lambda_communications_widget-new_db_user" {
+  name  = module.lambda_communications_widget-new.lambda_function_name
+  login = true
+  // RDS iam takes precedence over password auth, so this is disabled immediatly
+  password  = "tmp-lambda_communications_widget_db_user-password"
+  superuser = false
+  roles     = ["rds_iam", "pg_read_all_data", "pg_write_all_data"]
 }
