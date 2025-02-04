@@ -1,5 +1,6 @@
-import subprocess
-import os
+import base64
+import json
+import requests
 import time
 import sys
 
@@ -71,10 +72,54 @@ resource "postgresql_role" "lambda_<lambda_name>_db_user" {
 }
 """
 
+class GitHubFileUploader:
+    def __init__(self, repo_owner, repo_name, file_path, file_content, commit_message, token, branch='main'):
+        self.repo_owner = repo_owner
+        self.repo_name = repo_name
+        self.file_path = file_path
+        self.file_content = file_content
+        self.commit_message = commit_message
+        self.token = token
+        self.branch = branch
+        self.api_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}'
+
+    def upload_file(self):
+        """Upload the file to the specified GitHub repository."""
+        encoded_content = base64.b64encode(self.file_content.encode()).decode()
+
+        data = {
+            'message': self.commit_message,
+            'content': encoded_content,
+            'branch': self.branch
+        }
+
+        headers = {
+            'Authorization': f'token {self.token}',
+        }
+
+        # Check if the file already exists on GitHub
+        response = requests.get(self.api_url, headers=headers)
+
+        if response.status_code == 200:
+            # The file exists, retrieve its sha for updating
+            file_sha = response.json()['sha']
+            data['sha'] = file_sha  # Add the sha to update the file
+
+        # Make the request to either create or update the file
+        response = requests.put(self.api_url, headers=headers, data=json.dumps(data))
+
+        # Check the response
+        if response.status_code == 201 or response.status_code == 200:
+            print(f"File uploaded successfully to {self.branch} branch!")
+        else:
+            print(f"Error uploading file: {response.status_code} - {response.text}")
+            print(f"Response body: {response.text}")
+
+
 class TerraformManager:
     def __init__(
             self, file_content, lambda_handler, lambda_path, lambda_name, lambda_name2, password,
-            priority, git_name, git_email, remote_url, branch_name, logging_log_format=None
+            priority, branch_name, repo_owner, repo_name, file_path, commit_message, token, logging_log_format=None
     ):
         self.file_content = file_content
         self.lambda_handler = lambda_handler
@@ -84,10 +129,12 @@ class TerraformManager:
         self.priority = priority
         self.logging_log_format = logging_log_format
         self.password = password
-        self.remote_url = remote_url
         self.branch_name = branch_name
-        self.git_email = git_email
-        self.git_name = git_name
+        self.repo_owner = repo_owner
+        self.repo_name = repo_name
+        self.file_path = file_path
+        self.commit_message = commit_message
+        self.token = token
         self.return_file_name = None
         self.new_file_path = None
 
@@ -97,16 +144,8 @@ class TerraformManager:
             sys.stdout.flush()
             time.sleep(delay)
 
-
-    def configure_github(self):
-        subprocess.run(["git", "config", "user.name", self.git_name])
-
-        subprocess.run(
-            ["git", "config", "user.email", self.git_email],)
-
-        print("Git user configuration updated successfully!")
-
-    def make_file(self, out_filename, git=False):
+    def make_file(self, out_filename):
+        """Modify the file content and save it with the given output filename."""
         print('Original file content will be modified and saved as:', out_filename)
 
         try:
@@ -117,59 +156,30 @@ class TerraformManager:
             new_content = new_content.replace('<priority>', str(self.priority))
             new_content = new_content.replace('<password>', self.password)
 
-            print(f'<----------------- {out_filename} ----------------->\n\n')
-
-            self.typewriter(new_content)
-
-            print(f'\n')
-
             if self.logging_log_format is None:
                 new_content = new_content.replace('<logging_log_format>', "")
             else:
                 string = f'logging_log_format = "{self.logging_log_format}"'
                 new_content = new_content.replace('<logging_log_format>', string)
 
+            print(f'<----------------- {out_filename} ----------------->\n\n')
+            self.typewriter(new_content)
 
             with open(out_filename, 'w') as file:
                 file.write(new_content)
 
-            if git:
-
-                self.configure_github()
-
-                modified_files = subprocess.check_output(['git', 'status', '--porcelain'], universal_newlines=True)
-
-                if f"?? {out_filename}" in modified_files:
-                    subprocess.run(['git', 'add', out_filename], check=True, shell=True)
-
-                print(f'<----------------- Updating GitHub ----------------->\n\n')
-                self.push_repository(
-                    remote_url=self.remote_url,
-                    message=f'Adding new lambda {self.lambda_name}',
-                    branch_name=self.branch_name,
-                )
+            uploader = GitHubFileUploader(
+                repo_owner=self.repo_owner,
+                repo_name=self.repo_name,
+                file_path=self.file_path,
+                file_content=new_content,
+                commit_message=self.commit_message,
+                token=self.token,
+            )
+            uploader.upload_file()
 
         except Exception as e:
             print(f"An error occurred while processing the file: {e}")
-
-    def push_repository(self, message, remote_url, branch_name):
-        try:
-            if not os.path.exists('.git'):
-                subprocess.run(['git', 'init'], check=True, shell=True)
-
-            remote_check = subprocess.run(
-                ['git', 'remote', 'get-url', 'origin'],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            if remote_check.returncode != 0:
-                subprocess.run(['git', 'remote', 'add', 'origin', remote_url], check=True, shell=True)
-            subprocess.run(['git', 'commit', '-m', message], check=True, shell=True)
-            subprocess.run(['git', 'push', '-u', 'origin', branch_name], check=True, shell=True)
-
-        except subprocess.CalledProcessError as e:
-            print(f"Git command failed: {e}")
-        except Exception as e:
-            print(f"An error occurred during the Git process: {e}")
 
 
 def main():
@@ -225,50 +235,57 @@ def main():
             print("The password cannot be empty.")
             password = input("Enter the password for the Lambda function: ")
 
-        git_name = input("Enter the Git name: ")
-        while not git_name.strip():
-            print("The Git name cannot be empty.")
-            git_name = input(
-                "Enter the Git name: ")
-
-        git_email = input("Enter the Git email: ")
-        while not git_email.strip():
-            print("The Git email cannot be empty.")
-            git_email = input(
-                "Enter the Git email: ")
-
-        remote_url = input(
-            "Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
-        while not remote_url.strip():
-            print("The Git repository URL cannot be empty.")
-            remote_url = input(
-                "Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
-
-        branch_name = input("Enter the Git branch name (e.g., main): ")
+        branch_name = input("Enter the Branch name: ")
         while not branch_name.strip():
-            print("The Git branch name cannot be empty.")
-            branch_name = input("Enter the Git branch name (e.g., main): ")
+            print("The Branch name cannot be empty.")
+            branch_name = input(
+                "Enter the Branch name: ")
+
+        repo_owner = input("Enter the repo owner (Username): ")
+        while not repo_owner.strip():
+            print("The repo owner cannot be empty.")
+            repo_owner = input(
+                "Enter the repo owner: ")
+
+        repo_name = input(
+            "Enter the Git repository name: ")
+        while not repo_name.strip():
+            print("The Git repository name cannot be empty.")
+            repo_name = input(
+                "Enter the Git repository name: ")
+
+        commit_message = input(f"Enter commit message 'Adding Terraform configuration {out_filename}': ")
+        if not commit_message.strip():
+            commit_message = f"Adding Terraform configuration {out_filename}"
+
+        token = input(f"Enter repo token '{repo_owner}/{repo_name}': ")
+        while not token.strip():
+            print("Repo token cannot be empty.")
+            token = input(
+                f"Enter repo token '{repo_owner}/{repo_name}': ")
 
         logging_log_format = input("Enter the logging log format (e.g., JSON) or press enter to skip: ")
         if logging_log_format.strip() == "":
             logging_log_format = None
 
-        obj = TerraformManager(
+        manager = TerraformManager(
             file_content=file_content,
             lambda_handler=lambda_handler,
             lambda_path=lambda_path,
             lambda_name=lambda_name,
             lambda_name2=lambda_name2,
-            priority=priority,
             password=password,
-            git_name=git_name,
-            git_email=git_email,
-            remote_url=remote_url,
+            priority=priority,
             branch_name=branch_name,
+            repo_owner=repo_owner,
+            repo_name=repo_name,
+            file_path=out_filename,
+            commit_message=commit_message,
+            token=token,
             logging_log_format=logging_log_format
         )
 
-        obj.make_file(out_filename, git=True)
+        manager.make_file(out_filename)
 
 
 if __name__ == "__main__":
