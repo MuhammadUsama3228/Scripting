@@ -178,90 +178,100 @@ class TerraformManager:
 def main():
     print("Welcome to the Terraform Lambda Manager!")
 
-    out_filename = input("Enter the desired output file name (e.g., output_lambda.tf): ")
-    while not out_filename.strip():
-        print("The output file name cannot be empty.")
-        out_filename = input("Enter the desired output file name (e.g., output_lambda.tf): ")
+    while True:  # Keep the program running until 'q' is pressed
+        out_filename = input("Enter the desired output file name (e.g., output_lambda.tf) or press 'q' to quit: ")
 
-    if not out_filename.endswith('.tf'):
-        out_filename = out_filename + '.tf'
+        if out_filename.lower() == 'q':
+            print("Exiting the program.")
+            break  # Exit the loop and the program
 
-    lambda_handler = input(
-        "Enter the Lambda handler (e.g., com.**********.communicationswidget.CommunicationsWidgetHandler::handleRequest): ")
-    while not lambda_handler.strip():
-        print("The Lambda handler cannot be empty.")
+        while not out_filename.strip():
+            print("The output file name cannot be empty.")
+            out_filename = input("Enter the desired output file name (e.g., output_lambda.tf): ")
+
+        if not out_filename.endswith('.tf'):
+            out_filename = out_filename + '.tf'
+
         lambda_handler = input(
-            "Enter the Lambda handler (e.g., com.*********.communicationswidget.CommunicationsWidgetHandler::handleRequest): ")
+            "Enter the Lambda handler (e.g., com.**********.communicationswidget.CommunicationsWidgetHandler::handleRequest): ")
+        while not lambda_handler.strip():
+            print("The Lambda handler cannot be empty.")
+            lambda_handler = input(
+                "Enter the Lambda handler (e.g., com.*********.communicationswidget.CommunicationsWidgetHandler::handleRequest): ")
 
-    lambda_name = input("Enter the Lambda function name: ")
-    while not lambda_name.strip():
-        print("The Lambda function name cannot be empty.")
         lambda_name = input("Enter the Lambda function name: ")
+        while not lambda_name.strip():
+            print("The Lambda function name cannot be empty.")
+            lambda_name = input("Enter the Lambda function name: ")
 
-    lambda_name2 = input("Enter a secondary Lambda function name: ")
-    while not lambda_name2.strip():
-        print("The secondary Lambda function name cannot be empty.")
         lambda_name2 = input("Enter a secondary Lambda function name: ")
+        while not lambda_name2.strip():
+            print("The secondary Lambda function name cannot be empty.")
+            lambda_name2 = input("Enter a secondary Lambda function name: ")
 
-    lambda_path = input("Enter the Lambda path (e.g., [\"/communications-widget\", \"/communications-widget/*\"]): ")
-    while not lambda_path.strip():
-        print("The Lambda path cannot be empty.")
-        lambda_path = input("Enter the Lambda path (e.g., [\"/communications-widget\", \"/communications-widget/*\"]): ")
+        lambda_path = input(
+            "Enter the Lambda path (e.g., [\"/communications-widget\", \"/communications-widget/*\"]): ")
+        while not lambda_path.strip():
+            print("The Lambda path cannot be empty.")
+            lambda_path = input(
+                "Enter the Lambda path (e.g., [\"/communications-widget\", \"/communications-widget/*\"]): ")
 
-    while True:
-        try:
-            priority = int(input("Enter the priority number (e.g., 19): "))
-            break
-        except ValueError:
-            print("Priority should be an integer. Please enter a valid number.")
+        while True:
+            try:
+                priority = int(input("Enter the priority number (e.g., 19): "))
+                break
+            except ValueError:
+                print("Priority should be an integer. Please enter a valid number.")
 
-    password = input("Enter the password for the Lambda function: ")
-    while not password.strip():
-        print("The password cannot be empty.")
         password = input("Enter the password for the Lambda function: ")
+        while not password.strip():
+            print("The password cannot be empty.")
+            password = input("Enter the password for the Lambda function: ")
 
-    git_name = input("Enter the Git name: ")
-    while not git_name.strip():
-        print("The Git name cannot be empty.")
-        git_name = input(
-            "Enter the Git name: ")
+        git_name = input("Enter the Git name: ")
+        while not git_name.strip():
+            print("The Git name cannot be empty.")
+            git_name = input(
+                "Enter the Git name: ")
 
-    git_email = input("Enter the Git email: ")
-    while not git_email.strip():
-        print("The Git email cannot be empty.")
-        git_email = input(
-            "Enter the Git email: ")
+        git_email = input("Enter the Git email: ")
+        while not git_email.strip():
+            print("The Git email cannot be empty.")
+            git_email = input(
+                "Enter the Git email: ")
 
-    remote_url = input("Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
-    while not remote_url.strip():
-        print("The Git repository URL cannot be empty.")
-        remote_url = input("Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
+        remote_url = input(
+            "Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
+        while not remote_url.strip():
+            print("The Git repository URL cannot be empty.")
+            remote_url = input(
+                "Enter the Git repository URL (e.g., https://github.com/your-username/your-repository.git): ")
 
-    branch_name = input("Enter the Git branch name (e.g., main): ")
-    while not branch_name.strip():
-        print("The Git branch name cannot be empty.")
         branch_name = input("Enter the Git branch name (e.g., main): ")
+        while not branch_name.strip():
+            print("The Git branch name cannot be empty.")
+            branch_name = input("Enter the Git branch name (e.g., main): ")
 
-    logging_log_format = input("Enter the logging log format (e.g., JSON) or press enter to skip: ")
-    if logging_log_format.strip() == "":
-        logging_log_format = None
+        logging_log_format = input("Enter the logging log format (e.g., JSON) or press enter to skip: ")
+        if logging_log_format.strip() == "":
+            logging_log_format = None
 
-    obj = TerraformManager(
-        file_content=file_content,
-        lambda_handler=lambda_handler,
-        lambda_path=lambda_path,
-        lambda_name=lambda_name,
-        lambda_name2=lambda_name2,
-        priority=priority,
-        password=password,
-        git_name=git_name,
-        git_email=git_email,
-        remote_url=remote_url,
-        branch_name=branch_name,
-        logging_log_format=logging_log_format
-    )
+        obj = TerraformManager(
+            file_content=file_content,
+            lambda_handler=lambda_handler,
+            lambda_path=lambda_path,
+            lambda_name=lambda_name,
+            lambda_name2=lambda_name2,
+            priority=priority,
+            password=password,
+            git_name=git_name,
+            git_email=git_email,
+            remote_url=remote_url,
+            branch_name=branch_name,
+            logging_log_format=logging_log_format
+        )
 
-    obj.make_file(out_filename, git=True)
+        obj.make_file(out_filename, git=True)
 
 
 if __name__ == "__main__":
