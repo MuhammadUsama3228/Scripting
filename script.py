@@ -142,9 +142,6 @@ class TerraformManager:
                 if f"?? {out_filename}" in modified_files:
                     subprocess.run(['git', 'add', out_filename], check=True, shell=True)
 
-                # if "?? script.py" in modified_files or "M script.py" in modified_files:
-                #     print("Skipping update of private file script.py")
-
                 print(f'<----------------- Updating GitHub ----------------->\n\n')
                 self.push_repository(
                     remote_url=self.remote_url,
@@ -178,12 +175,12 @@ class TerraformManager:
 def main():
     print("Welcome to the Terraform Lambda Manager!")
 
-    while True:  # Keep the program running until 'q' is pressed
+    while True:
         out_filename = input("Enter the desired output file name (e.g., output_lambda.tf) or press 'q' to quit: ")
 
         if out_filename.lower() == 'q':
             print("Exiting the program.")
-            break  # Exit the loop and the program
+            break
 
         while not out_filename.strip():
             print("The output file name cannot be empty.")
